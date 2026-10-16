@@ -16,6 +16,12 @@ class MainWindow:
         )
         title_label.pack(pady=30)
 
+        instructions_label = tk.Label(
+            self.window,
+            text="Choose an option below to continue."
+        )
+        instructions_label.pack(pady=5)
+
         create_account_button = tk.Button(
             self.window,
             text="Create Account",
