@@ -14,6 +14,12 @@ class LoginGUI:
         )
         title_label.pack(pady=20)
 
+        instructions_label = tk.Label(
+            self.window,
+            text="Enter your username and password to login."
+        )
+        instructions_label.pack(pady=10)
+
         username_label = tk.Label(
             self.window,
             text="Username:"
@@ -59,8 +65,9 @@ class LoginGUI:
         username = self.username_entry.get()
         password = self.password_entry.get()
 
-        print("Login username:", username)
-        print("Login password:", password)
+        print("Login attempted")
+        print("Username:", username)
+        print("Password:", password)
 
     def cancel(self):
         self.window.destroy()
