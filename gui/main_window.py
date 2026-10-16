@@ -1,4 +1,6 @@
 import tkinter as tk
+from .account_gui import AccountGUI
+from .login_gui import LoginGUI
 
 
 class MainWindow:
@@ -39,10 +41,10 @@ class MainWindow:
         cancel_button.pack(pady=10)
 
     def create_account(self):
-        print("Create Account selected")
+        AccountGUI()
 
     def login(self):
-        print("Login selected")
+        LoginGUI()
 
     def cancel(self):
         self.window.destroy()
