@@ -1,8 +1,11 @@
 """Entry point for the application."""
 
+from gui.main_window import MainWindow
+
 
 def main():
-    pass
+    app = MainWindow()
+    app.run()
 
 
 if __name__ == "__main__":
