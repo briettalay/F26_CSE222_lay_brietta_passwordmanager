@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 
 
 class LoginGUI:
@@ -61,13 +62,23 @@ class LoginGUI:
         )
         cancel_button.pack()
 
+        self.username_entry.focus_set()
+
     def login(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
 
-        print("Login attempted")
-        print("Username:", username)
-        print("Password:", password)
+        if username == "" or password == "":
+            messagebox.showerror(
+                "Error",
+                "Username and password are required."
+            )
+            return
+
+        messagebox.showinfo(
+            "Login",
+            "Login information entered successfully."
+        )
 
     def cancel(self):
         self.window.destroy()
