@@ -1,12 +1,15 @@
 import tkinter as tk
 from tkinter import messagebox
+import os
+
+from application.password_manager import PasswordManagerGUI
 
 
 class LoginGUI:
     def __init__(self):
         self.window = tk.Toplevel()
         self.window.title("Login")
-        self.window.geometry("400x300")
+        self.window.geometry("400x350")
 
         title_label = tk.Label(
             self.window,
@@ -29,7 +32,8 @@ class LoginGUI:
 
         self.username_entry = tk.Entry(
             self.window,
-            width=30
+            width=30,
+            justify="right"
         )
         self.username_entry.pack(pady=5)
 
@@ -42,17 +46,18 @@ class LoginGUI:
         self.password_entry = tk.Entry(
             self.window,
             width=30,
-            show="*"
+            show="*",
+            justify="right"
         )
         self.password_entry.pack(pady=5)
 
-        login_button = tk.Button(
+        self.login_button = tk.Button(
             self.window,
             text="Login",
             width=20,
             command=self.login
         )
-        login_button.pack(pady=15)
+        self.login_button.pack(pady=15)
 
         cancel_button = tk.Button(
             self.window,
@@ -62,23 +67,46 @@ class LoginGUI:
         )
         cancel_button.pack()
 
-        self.username_entry.focus_set()
+        self.password_entry.bind(
+            "<Return>",
+            self.login
+        )
 
-    def login(self):
+    def login(self, event=None):
+        self.login_button.config(state="disabled")
+
         username = self.username_entry.get()
         password = self.password_entry.get()
 
-        if username == "" or password == "":
+        account_file = "data/account.txt"
+
+        if not os.path.exists(account_file):
             messagebox.showerror(
-                "Error",
-                "Username and password are required."
+                "Login Error",
+                "No account exists. Please create an account first."
             )
+
+            self.login_button.config(state="normal")
             return
 
-        messagebox.showinfo(
-            "Login",
-            "Login information entered successfully."
-        )
+        with open(account_file, "r") as file:
+            stored_username = file.readline().strip()
+            stored_password = file.readline().strip()
+
+        if username == stored_username and password == stored_password:
+            self.window.destroy()
+            PasswordManagerGUI()
+
+        else:
+            messagebox.showerror(
+                "Login Error",
+                "Invalid username or password."
+            )
+
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+
+            self.login_button.config(state="normal")
 
     def cancel(self):
         self.window.destroy()
