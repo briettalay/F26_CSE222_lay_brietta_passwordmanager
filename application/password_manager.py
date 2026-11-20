@@ -1,347 +1,294 @@
+
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 import os
 
 
 class PasswordManagerGUI:
+
     def __init__(self):
         self.window = tk.Toplevel()
         self.window.title("Password Manager")
         self.window.geometry("600x500")
 
-        title_label = tk.Label(
+        self.display_window = None
+        self.tree = None
+
+        # Original layout
+        tk.Label(
             self.window,
             text="Password Manager",
-            font=("Arial", 22)
-        )
-        title_label.pack(pady=20)
+            font=("Arial", 18, "bold")
+        ).pack(pady=15)
 
-        instructions_label = tk.Label(
+        tk.Label(
             self.window,
-            text="Enter the information for a password entry."
+            text="Enter the information for your password entry below."
+        ).pack(pady=5)
+
+        form = tk.Frame(self.window)
+        form.pack(pady=15)
+
+        tk.Label(form, text="Description:").grid(
+            row=0, column=0, padx=10, pady=10, sticky="e"
         )
-        instructions_label.pack(pady=5)
+        self.description_entry = tk.Entry(form, width=35)
+        self.description_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        description_frame = tk.Frame(self.window)
-        description_frame.pack(pady=10)
-
-        description_label = tk.Label(
-            description_frame,
-            text="Description:",
-            width=15
+        tk.Label(form, text="Username:").grid(
+            row=1, column=0, padx=10, pady=10, sticky="e"
         )
-        description_label.pack(side=tk.LEFT)
+        self.username_entry = tk.Entry(form, width=35)
+        self.username_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        self.description_entry = tk.Entry(
-            description_frame,
-            width=35
+        tk.Label(form, text="Password:").grid(
+            row=2, column=0, padx=10, pady=10, sticky="e"
         )
-        self.description_entry.pack(side=tk.LEFT)
-
-        username_frame = tk.Frame(self.window)
-        username_frame.pack(pady=10)
-
-        username_label = tk.Label(
-            username_frame,
-            text="Username:",
-            width=15
-        )
-        username_label.pack(side=tk.LEFT)
-
-        self.username_entry = tk.Entry(
-            username_frame,
-            width=35
-        )
-        self.username_entry.pack(side=tk.LEFT)
-
-        password_frame = tk.Frame(self.window)
-        password_frame.pack(pady=10)
-
-        password_label = tk.Label(
-            password_frame,
-            text="Password:",
-            width=15
-        )
-        password_label.pack(side=tk.LEFT)
-
-        self.password_entry = tk.Entry(
-            password_frame,
-            width=35,
-            show="*"
-        )
-        self.password_entry.pack(side=tk.LEFT)
+        self.password_entry = tk.Entry(form, width=35)
+        self.password_entry.grid(row=2, column=1, padx=10, pady=10)
 
         button_frame = tk.Frame(self.window)
-        button_frame.pack(pady=25)
+        button_frame.pack(pady=15)
 
-        self.update_button = tk.Button(
-            button_frame,
-            text="Update",
-            width=15,
-            command=self.update
-        )
-        self.update_button.grid(row=0, column=0, padx=5)
+        tk.Button(
+            button_frame, text="Update",
+            width=12, command=self.update
+        ).grid(row=0, column=0, padx=8)
 
-        self.search_button = tk.Button(
-            button_frame,
-            text="Search",
-            width=15,
-            command=self.search
-        )
-        self.search_button.grid(row=0, column=1, padx=5)
+        tk.Button(
+            button_frame, text="Search",
+            width=12, command=self.search
+        ).grid(row=0, column=1, padx=8)
 
-        self.display_button = tk.Button(
-            button_frame,
-            text="Display All",
-            width=15,
-            command=self.display_all
-        )
-        self.display_button.grid(row=0, column=2, padx=5)
+        tk.Button(
+            button_frame, text="Display All",
+            width=12, command=self.display_all
+        ).grid(row=0, column=2, padx=8)
 
-        self.delete_button = tk.Button(
-            button_frame,
-            text="Delete",
-            width=15,
-            command=self.delete
-        )
-        self.delete_button.grid(row=1, column=1, pady=10)
+        tk.Button(
+            self.window, text="Delete",
+            width=12, command=self.delete
+        ).pack(pady=8)
 
-        exit_button = tk.Button(
-            self.window,
-            text="Exit",
-            width=15,
-            command=self.cancel
-        )
-        exit_button.pack(pady=10)
+        tk.Button(
+            self.window, text="Exit",
+            width=12, command=self.cancel
+        ).pack(pady=8)
 
-        self.update_button.config(state="disabled")
-        self.search_button.config(state="disabled")
-        self.delete_button.config(state="disabled")
+    def get_password_file(self):
+        os.makedirs("data", exist_ok=True)
+        return os.path.join("data", "passwords.txt")
 
-        self.description_entry.bind(
-            "<KeyRelease>",
-            self.check_description
-        )
+    def load_entries(self):
+        filename = self.get_password_file()
+        entries = []
 
-    def check_description(self, event=None):
-        description = self.description_entry.get().strip()
+        if not os.path.exists(filename):
+            return entries
 
-        if description:
-            self.update_button.config(state="normal")
-            self.search_button.config(state="normal")
-            self.delete_button.config(state="normal")
-        else:
-            self.update_button.config(state="disabled")
-            self.search_button.config(state="disabled")
-            self.delete_button.config(state="disabled")
+        with open(filename, "r") as file:
+            lines = file.read().splitlines()
+
+        for i in range(0, len(lines) - 2, 3):
+            entries.append((
+                lines[i],
+                lines[i + 1],
+                lines[i + 2]
+            ))
+
+        return entries
+
+    def save_entries(self, entries):
+        filename = self.get_password_file()
+
+        with open(filename, "w") as file:
+            for description, username, password in entries:
+                file.write(description + "\n")
+                file.write(username + "\n")
+                file.write(password + "\n")
+
+        # Automatically refresh the open Display All window.
+        if self.display_window is not None:
+            if self.display_window.winfo_exists():
+                self.display_window.after_idle(
+                    self.refresh_display_window
+                )
 
     def update(self):
         description = self.description_entry.get().strip()
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
 
-        if description == "":
-            messagebox.showerror(
-                "Error",
-                "Description cannot be empty."
+        if not description or not username or not password:
+            messagebox.showwarning(
+                "Missing Information",
+                "Please fill in all fields."
             )
             return
 
-        if username == "" or password == "":
-            messagebox.showerror(
-                "Error",
-                "Username and password cannot be empty."
-            )
-            return
+        entries = self.load_entries()
+        updated = False
 
-        if not os.path.exists("data"):
-            os.makedirs("data")
-
-        password_file = "data/passwords.txt"
-
-        if not os.path.exists(password_file):
-            with open(password_file, "a") as file:
-                file.write(description + "\n")
-                file.write(username + "\n")
-                file.write(password + "\n")
-
-            messagebox.showinfo(
-                "Success",
-                "Password entry saved."
-            )
-
-            self.clear_entries()
-            return
-
-        with open(password_file, "r") as file:
-            lines = file.readlines()
-
-        found = False
-
-        for i in range(0, len(lines), 3):
-            if lines[i].strip() == description:
-                lines[i + 1] = username + "\n"
-                lines[i + 2] = password + "\n"
-                found = True
+        for i, entry in enumerate(entries):
+            if entry[0].lower() == description.lower():
+                entries[i] = (description, username, password)
+                updated = True
                 break
 
-        if found:
-            with open(password_file, "w") as file:
-                file.writelines(lines)
+        if not updated:
+            entries.append((description, username, password))
 
-            messagebox.showinfo(
-                "Success",
-                "Password entry updated."
-            )
-        else:
-            with open(password_file, "a") as file:
-                file.write(description + "\n")
-                file.write(username + "\n")
-                file.write(password + "\n")
+        self.save_entries(entries)
 
-            messagebox.showinfo(
-                "Success",
-                "Password entry saved."
-            )
+        messagebox.showinfo(
+            "Success",
+            "Password entry saved successfully."
+        )
 
         self.clear_entries()
 
     def search(self):
         description = self.description_entry.get().strip()
 
-        if not os.path.exists("data/passwords.txt"):
-            messagebox.showinfo(
-                "Search",
-                "No password entries found."
+        if not description:
+            messagebox.showwarning(
+                "Missing Information",
+                "Please enter a description to search."
             )
             return
 
-        with open("data/passwords.txt", "r") as file:
-            lines = file.readlines()
-
-        found = False
-
-        for i in range(0, len(lines), 3):
-            saved_description = lines[i].strip()
-
-            if saved_description == description:
-                self.username_entry.delete(0, tk.END)
-                self.password_entry.delete(0, tk.END)
-
-                self.username_entry.insert(
-                    0,
-                    lines[i + 1].strip()
-                )
-
-                self.password_entry.insert(
-                    0,
-                    lines[i + 2].strip()
-                )
-
-                found = True
-                break
-
-        if not found:
-            messagebox.showinfo(
-                "Search",
-                "Password entry not found."
-            )
-
-    def display_all(self):
-        password_file = "data/passwords.txt"
-
-        if not os.path.exists(password_file):
-            messagebox.showinfo(
-                "Display All",
-                "No password entries found."
-            )
-            return
-
-        with open(password_file, "r") as file:
-            lines = file.readlines()
-
-        if len(lines) == 0:
-            messagebox.showinfo(
-                "Display All",
-                "No password entries found."
-            )
-            return
-
-        entries = []
-
-        for i in range(0, len(lines), 3):
-            description = lines[i].strip()
-            username = lines[i + 1].strip()
-            password = lines[i + 2].strip()
-
-            entries.append(
-                (description, username, password)
-            )
-
-        entries.sort()
-
-        display_text = ""
+        entries = self.load_entries()
 
         for entry in entries:
-            display_text += "Description: " + entry[0] + "\n"
-            display_text += "Username: " + entry[1] + "\n"
-            display_text += "Password: " + entry[2] + "\n"
-            display_text += "\n"
+            if entry[0].lower() == description.lower():
+                self.username_entry.delete(0, tk.END)
+                self.username_entry.insert(0, entry[1])
+
+                self.password_entry.delete(0, tk.END)
+                self.password_entry.insert(0, entry[2])
+                return
 
         messagebox.showinfo(
-            "All Passwords",
-            display_text
+            "Not Found",
+            "No password entry was found."
         )
+
+    def display_all(self):
+        if (
+            self.display_window is not None
+            and self.display_window.winfo_exists()
+        ):
+            self.display_window.lift()
+            self.refresh_display_window()
+            return
+
+        self.display_window = tk.Toplevel(self.window)
+        self.display_window.title("All Password Entries")
+        self.display_window.geometry("650x350")
+
+        columns = ("Description", "Username", "Password")
+
+        self.tree = ttk.Treeview(
+            self.display_window,
+            columns=columns,
+            show="headings"
+        )
+
+        for column in columns:
+            self.tree.heading(column, text=column)
+            self.tree.column(column, width=200)
+
+        scrollbar = ttk.Scrollbar(
+            self.display_window,
+            orient="vertical",
+            command=self.tree.yview
+        )
+
+        self.tree.configure(yscrollcommand=scrollbar.set)
+
+        self.tree.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        self.display_window.protocol(
+            "WM_DELETE_WINDOW",
+            self.close_display_window
+        )
+
+        self.refresh_display_window()
+
+    def refresh_display_window(self):
+        if self.display_window is None:
+            return
+
+        if not self.display_window.winfo_exists():
+            self.display_window = None
+            self.tree = None
+            return
+
+        if self.tree is None or not self.tree.winfo_exists():
+            return
+
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        entries = self.load_entries()
+        entries.sort(key=lambda entry: entry[0].casefold())
+
+        for description, username, password in entries:
+            self.tree.insert(
+                "",
+                tk.END,
+                values=(description, username, password)
+            )
+
+    def close_display_window(self):
+        if self.display_window is not None:
+            self.display_window.destroy()
+
+        self.display_window = None
+        self.tree = None
 
     def delete(self):
         description = self.description_entry.get().strip()
 
-        if not os.path.exists("data/passwords.txt"):
-            messagebox.showinfo(
-                "Delete",
-                "No password entries found."
+        if not description:
+            messagebox.showwarning(
+                "Missing Information",
+                "Please enter a description to delete."
             )
             return
 
-        with open("data/passwords.txt", "r") as file:
-            lines = file.readlines()
+        entries = self.load_entries()
 
-        new_lines = []
-        found = False
+        updated_entries = [
+            entry for entry in entries
+            if entry[0].lower() != description.lower()
+        ]
 
-        for i in range(0, len(lines), 3):
-            saved_description = lines[i].strip()
-
-            if saved_description == description:
-                found = True
-            else:
-                new_lines.append(lines[i])
-                new_lines.append(lines[i + 1])
-                new_lines.append(lines[i + 2])
-
-        if found:
-            with open("data/passwords.txt", "w") as file:
-                file.writelines(new_lines)
-
+        if len(updated_entries) == len(entries):
             messagebox.showinfo(
-                "Delete",
-                "Password entry deleted."
+                "Not Found",
+                "No password entry was found."
             )
+            return
 
-            self.username_entry.delete(0, tk.END)
-            self.password_entry.delete(0, tk.END)
+        self.save_entries(updated_entries)
 
-        else:
-            messagebox.showinfo(
-                "Delete",
-                "Password entry not found."
-            )
+        messagebox.showinfo(
+            "Success",
+            "Password entry deleted successfully."
+        )
+
+        self.clear_entries()
 
     def clear_entries(self):
         self.description_entry.delete(0, tk.END)
         self.username_entry.delete(0, tk.END)
         self.password_entry.delete(0, tk.END)
-        self.check_description()
 
     def cancel(self):
+        if self.display_window is not None:
+            self.close_display_window()
+
         self.window.destroy()
